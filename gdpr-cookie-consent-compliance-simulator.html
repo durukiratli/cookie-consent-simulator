@@ -1,0 +1,1866 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="An interactive GDPR cookie consent compliance simulator based on EDPB Guidelines 05/2020."
+    />
+    <title>GDPR Cookie Consent Compliance Simulator</title>
+    <style>
+:root {
+  --ink: #15231e;
+  --muted: #66736e;
+  --line: #dfe5e1;
+  --surface: #ffffff;
+  --canvas: #f3f6f2;
+  --green: #1e7a52;
+  --green-dark: #155d3e;
+  --green-soft: #eaf5ee;
+  --red: #c44338;
+  --red-soft: #fbeeed;
+  --amber: #a86318;
+  --amber-soft: #fff5e7;
+  --blue: #3468b4;
+  --shadow: 0 18px 50px rgba(31, 50, 42, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 8% 2%, rgba(168, 207, 186, 0.18), transparent 22rem),
+    var(--canvas);
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible + .switch,
+input:focus-visible + span {
+  outline: 3px solid rgba(52, 104, 180, 0.35);
+  outline-offset: 3px;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  height: 74px;
+  padding: 0 max(24px, calc((100vw - 1440px) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(197, 207, 201, 0.75);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+  font: 800 20px/1 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.04em;
+}
+
+.brand > span:last-child span {
+  color: var(--green);
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--green);
+  box-shadow: 0 7px 15px rgba(30, 122, 82, 0.22);
+}
+
+.brand-mark svg {
+  width: 22px;
+  fill: none;
+  stroke: white;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.guideline-pill {
+  padding: 7px 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d9e7de;
+  border-radius: 999px;
+  color: #486257;
+  background: #f5faf7;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.pulse-dot,
+.live-badge span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #31a46f;
+  box-shadow: 0 0 0 4px rgba(49, 164, 111, 0.12);
+}
+
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #52615b;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.source-link:hover {
+  color: var(--green);
+}
+
+.source-link svg {
+  width: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 47px 24px 40px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  align-items: end;
+  gap: 50px;
+  margin-bottom: 38px;
+}
+
+.eyebrow,
+.section-number {
+  margin: 0 0 10px;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0;
+  font: 700 clamp(36px, 4.2vw, 58px)/1.02 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.055em;
+}
+
+.hero h1 span {
+  color: var(--green);
+}
+
+.hero-copy {
+  max-width: 430px;
+  margin: 0 0 5px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: minmax(310px, 0.72fr) minmax(560px, 1.6fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.control-panel,
+.preview-card,
+.audit-card {
+  border: 1px solid rgba(210, 220, 214, 0.9);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow);
+}
+
+.control-panel {
+  padding: 25px;
+  position: sticky;
+  top: 96px;
+}
+
+.panel-heading,
+.card-heading,
+.audit-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-heading h2,
+.card-heading h2,
+.audit-topline h2 {
+  margin: 0;
+  font: 700 20px/1.15 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.reset-button {
+  padding: 6px 0;
+  border: 0;
+  color: #74817c;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.reset-button:hover {
+  color: var(--green);
+}
+
+.panel-intro {
+  margin: 13px 0 12px;
+  color: #76827d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.control-list {
+  border-top: 1px solid var(--line);
+}
+
+.control-item {
+  min-height: 87px;
+  padding: 17px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.control-copy {
+  display: grid;
+  gap: 5px;
+}
+
+.control-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.control-description {
+  max-width: 230px;
+  color: #87918d;
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+.switch-wrap {
+  min-width: 64px;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+}
+
+.switch-wrap input,
+.mini-switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.switch {
+  width: 37px;
+  height: 21px;
+  padding: 3px;
+  border-radius: 99px;
+  background: #ccd3cf;
+  transition: background 180ms ease;
+}
+
+.switch::after {
+  content: "";
+  display: block;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 4px rgba(20, 35, 29, 0.22);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.switch-wrap input:checked + .switch {
+  background: var(--green);
+}
+
+.switch-wrap input:checked + .switch::after {
+  transform: translateX(16px);
+}
+
+.switch-value {
+  color: #89938f;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.switch-wrap input:checked ~ .switch-value {
+  color: var(--green);
+}
+
+.principle-note {
+  margin-top: 20px;
+  padding: 14px;
+  display: flex;
+  gap: 11px;
+  border: 1px solid #dcebe1;
+  border-radius: 12px;
+  background: #f3faf6;
+}
+
+.principle-note svg {
+  width: 17px;
+  min-width: 17px;
+  fill: none;
+  stroke: var(--green);
+  stroke-linecap: round;
+  stroke-width: 1.7;
+}
+
+.principle-note p {
+  margin: 0;
+  color: #627069;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.principle-note strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-size: 10.5px;
+}
+
+.workspace {
+  display: grid;
+  gap: 22px;
+}
+
+.preview-card,
+.audit-card {
+  padding: 24px;
+}
+
+.card-heading {
+  margin-bottom: 16px;
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.live-badge span {
+  width: 6px;
+  height: 6px;
+  animation: breathe 2s infinite;
+}
+
+@keyframes breathe {
+  50% { opacity: 0.45; }
+}
+
+.browser-frame {
+  overflow: hidden;
+  border: 1px solid #d9dfdc;
+  border-radius: 13px;
+  background: #f7f8f7;
+}
+
+.browser-bar {
+  height: 35px;
+  padding: 0 12px;
+  display: grid;
+  grid-template-columns: 1fr 2.4fr 1fr;
+  align-items: center;
+  background: #f0f2f1;
+  border-bottom: 1px solid #dce1de;
+}
+
+.browser-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.browser-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c9cfcc;
+}
+
+.address-bar {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #e1e4e2;
+  border-radius: 6px;
+  color: #929b97;
+  background: white;
+  font-size: 8px;
+}
+
+.address-bar svg {
+  width: 9px;
+  fill: none;
+  stroke: #9da5a1;
+  stroke-linecap: round;
+  stroke-width: 1.2;
+}
+
+.browser-menu {
+  justify-self: end;
+  color: #a1a9a5;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.mock-site {
+  height: 387px;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.88), rgba(250, 247, 239, 0.83)),
+    #faf8f2;
+}
+
+.mock-nav {
+  height: 53px;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  border-bottom: 1px solid rgba(42, 54, 48, 0.08);
+}
+
+.mock-logo {
+  font: 800 13px/1 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.05em;
+}
+
+.mock-logo span {
+  position: relative;
+  top: -5px;
+  font-size: 5px;
+}
+
+.mock-links {
+  margin: auto;
+  display: flex;
+  gap: 25px;
+  color: #65706b;
+  font-size: 7.5px;
+  font-weight: 600;
+}
+
+.mock-nav button {
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 6px;
+  color: white;
+  background: #18271f;
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.mock-hero {
+  padding: 54px 0 0 70px;
+  position: relative;
+  z-index: 2;
+}
+
+.mock-kicker {
+  color: #6e8276;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mock-hero h3 {
+  margin: 9px 0 12px;
+  font: 700 31px/1.02 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.055em;
+}
+
+.mock-hero p {
+  width: 235px;
+  margin: 0;
+  color: #79827e;
+  font-size: 8.5px;
+  line-height: 1.5;
+}
+
+.mock-cta {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  color: #49544f;
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.mock-cta span:first-child {
+  padding: 8px 13px;
+  border-radius: 5px;
+  color: white;
+  background: var(--green);
+}
+
+.mock-shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+.shape-one {
+  width: 190px;
+  height: 190px;
+  right: 38px;
+  top: 84px;
+  background: linear-gradient(145deg, #cadfd2, #7caf93);
+  box-shadow: inset 18px 15px 45px rgba(255, 255, 255, 0.45);
+}
+
+.shape-two {
+  width: 84px;
+  height: 84px;
+  right: 126px;
+  top: 137px;
+  border: 14px solid rgba(255, 255, 255, 0.65);
+  background: transparent;
+}
+
+.cookie-banner {
+  width: calc(100% - 34px);
+  min-height: 122px;
+  padding: 18px 20px;
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  position: absolute;
+  left: 17px;
+  bottom: 16px;
+  z-index: 5;
+  border: 1px solid rgba(40, 57, 49, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 14px 35px rgba(29, 45, 37, 0.17);
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 200ms ease;
+}
+
+.cookie-banner.hidden {
+  transform: translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cookie-banner.is-updating {
+  animation: banner-update 260ms ease;
+}
+
+@keyframes banner-update {
+  50% { transform: translateY(3px); opacity: 0.78; }
+}
+
+.banner-close {
+  display: none;
+}
+
+.cookie-icon {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--green-soft);
+}
+
+.cookie-icon svg {
+  width: 18px;
+  fill: none;
+  stroke: var(--green);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-content h4 {
+  margin: 0 0 4px;
+  font: 700 12px/1.2 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.banner-content p {
+  margin: 0;
+  color: #6f7975;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.banner-content p a {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.banner-actions {
+  margin-top: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.banner-actions button {
+  min-height: 29px;
+  padding: 0 13px;
+  border: 1px solid #cdd6d1;
+  border-radius: 6px;
+  color: #33433c;
+  background: white;
+  cursor: pointer;
+  font-size: 7.5px;
+  font-weight: 700;
+  transition: 160ms ease;
+}
+
+.banner-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.banner-actions .accept-button {
+  border-color: var(--green);
+  color: white;
+  background: var(--green);
+}
+
+.banner-actions .settings-button {
+  border-color: transparent;
+  color: #50615a;
+  background: transparent;
+}
+
+.banner-actions.dark-pattern .accept-button {
+  min-height: 34px;
+  padding: 0 22px;
+  border-color: #125d3d;
+  background: linear-gradient(#2a9a68, #177148);
+  box-shadow: 0 6px 14px rgba(30, 122, 82, 0.28);
+  font-size: 8.5px;
+}
+
+.banner-actions.dark-pattern .reject-button {
+  order: 3;
+  padding: 0 4px;
+  border: 0;
+  color: #aeb5b2;
+  background: transparent;
+  font-size: 6.5px;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.reopen-banner {
+  padding: 7px 10px;
+  display: none;
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  z-index: 4;
+  border: 1px solid #c8d4cd;
+  border-radius: 6px;
+  color: var(--green-dark);
+  background: white;
+  cursor: pointer;
+  font-size: 7px;
+  font-weight: 700;
+  box-shadow: 0 5px 12px rgba(30, 47, 39, 0.1);
+}
+
+.reopen-banner.visible {
+  display: block;
+}
+
+.audit-card {
+  padding-bottom: 18px;
+}
+
+.score-ring {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.score-ring svg {
+  width: 52px;
+  position: absolute;
+  transform: rotate(-90deg);
+}
+
+.score-ring circle {
+  fill: none;
+  stroke-width: 5;
+}
+
+.ring-track {
+  stroke: #e8eeea;
+}
+
+.ring-value {
+  stroke: var(--green);
+  stroke-linecap: round;
+  stroke-dasharray: 182.2;
+  stroke-dashoffset: 0;
+  transition:
+    stroke-dashoffset 450ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    stroke 250ms ease;
+}
+
+.score-ring span {
+  font: 800 13px/1 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.status-block {
+  margin: 18px 0 16px;
+  padding: 15px 17px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid #cfe6d7;
+  border-radius: 12px;
+  background: var(--green-soft);
+  transition: 220ms ease;
+}
+
+.status-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  background: var(--green);
+  transition: 220ms ease;
+}
+
+.status-icon svg {
+  width: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+}
+
+.status-block p {
+  margin: 0 0 2px;
+  color: #6d7e75;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-block h3 {
+  margin: 0 0 2px;
+  color: var(--green-dark);
+  font: 700 15px/1.2 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.status-block span {
+  color: #65756d;
+  font-size: 9px;
+}
+
+.status-block.noncompliant {
+  border-color: #f0cbc7;
+  background: var(--red-soft);
+}
+
+.status-block.noncompliant .status-icon {
+  background: var(--red);
+}
+
+.status-block.noncompliant h3 {
+  color: #9f332b;
+}
+
+.status-block.review {
+  border-color: #eed9b9;
+  background: var(--amber-soft);
+}
+
+.status-block.review .status-icon {
+  background: var(--amber);
+}
+
+.status-block.review h3 {
+  color: #855018;
+}
+
+.assessment-list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  list-style: none;
+}
+
+.assessment-item {
+  min-height: 60px;
+  padding: 11px 12px;
+  display: flex;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fbfcfb;
+  opacity: 0;
+  transform: translateY(3px);
+  animation: item-in 220ms ease forwards;
+}
+
+@keyframes item-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.assessment-symbol {
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  display: grid;
+  place-items: center;
+  margin-top: 1px;
+  border-radius: 50%;
+  color: white;
+  background: var(--green);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.assessment-item.fail .assessment-symbol {
+  background: var(--red);
+}
+
+.assessment-item.warning .assessment-symbol {
+  background: var(--amber);
+}
+
+.assessment-item p {
+  margin: 0;
+  color: #66736e;
+  font-size: 8.5px;
+  line-height: 1.4;
+}
+
+.assessment-item strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-size: 9px;
+}
+
+.legal-ref {
+  white-space: nowrap;
+  color: #8b9791;
+  font-weight: 600;
+}
+
+.audit-footer {
+  margin-top: 15px;
+  padding-top: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  color: #84908b;
+  font-size: 8px;
+}
+
+.audit-footer > span:first-child {
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: #687770;
+  background: #eff3f0;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.audit-footer p {
+  margin: 0;
+}
+
+.updated-time {
+  margin-left: auto;
+}
+
+footer {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  color: #87928d;
+  font-size: 9px;
+}
+
+footer p {
+  margin: 0;
+}
+
+.modal-backdrop {
+  padding: 20px;
+  display: grid;
+  place-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(16, 27, 22, 0.54);
+  backdrop-filter: blur(6px);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.settings-modal {
+  width: min(480px, 100%);
+  padding: 28px;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 30px 80px rgba(14, 28, 21, 0.25);
+  animation: modal-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+
+.modal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.modal-heading h2 {
+  margin: 0;
+  font: 700 22px/1.2 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.035em;
+}
+
+.modal-heading button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: #6f7d76;
+  background: white;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.modal-intro {
+  margin: 12px 0 20px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.preference-list {
+  border-top: 1px solid var(--line);
+}
+
+.preference-row {
+  min-height: 74px;
+  padding: 15px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+label.preference-row {
+  cursor: pointer;
+}
+
+.preference-row > div {
+  display: grid;
+  gap: 4px;
+}
+
+.preference-row strong {
+  font-size: 13px;
+}
+
+.preference-row > div span {
+  color: #84908b;
+  font-size: 10px;
+}
+
+.always-on {
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mini-switch span {
+  width: 39px;
+  height: 22px;
+  padding: 3px;
+  display: block;
+  border-radius: 99px;
+  background: #ccd3cf;
+  transition: 180ms ease;
+}
+
+.mini-switch span::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  display: block;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 4px rgba(20, 35, 29, 0.2);
+  transition: transform 180ms ease;
+}
+
+.mini-switch input:checked + span {
+  background: var(--green);
+}
+
+.mini-switch input:checked + span::after {
+  transform: translateX(17px);
+}
+
+.modal-actions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-actions button {
+  min-height: 40px;
+  padding: 0 17px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.secondary-modal-button {
+  border: 1px solid #ccd5d0;
+  color: #48564f;
+  background: white;
+}
+
+.primary-modal-button {
+  border: 1px solid var(--green);
+  color: white;
+  background: var(--green);
+}
+
+.toast {
+  padding: 11px 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  z-index: 100;
+  border-radius: 9px;
+  color: white;
+  background: #17271f;
+  box-shadow: 0 12px 30px rgba(15, 30, 22, 0.23);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 12px);
+  transition: 220ms ease;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (max-width: 980px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .control-panel {
+    position: static;
+  }
+
+  .control-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 24px;
+  }
+}
+
+@media (max-width: 650px) {
+  .topbar {
+    height: 64px;
+  }
+
+  .guideline-pill {
+    display: none;
+  }
+
+  main {
+    padding: 32px 14px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  .control-list,
+  .assessment-list {
+    grid-template-columns: 1fr;
+  }
+
+  .control-panel,
+  .preview-card,
+  .audit-card {
+    padding: 18px;
+    border-radius: 15px;
+  }
+
+  .mock-site {
+    height: 440px;
+  }
+
+  .mock-links {
+    display: none;
+  }
+
+  .mock-hero {
+    padding-left: 36px;
+  }
+
+  .shape-one {
+    right: -55px;
+  }
+
+  .cookie-banner {
+    padding: 15px;
+  }
+
+  .banner-actions {
+    flex-wrap: wrap;
+  }
+
+  footer {
+    padding: 0 14px 25px;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Consent Lab home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" role="img">
+              <path d="M16 3 27 7v8c0 6.9-4.7 11.2-11 14C9.7 26.2 5 21.9 5 15V7l11-4Z" />
+              <path d="m11.5 16 3 3 6-7" />
+            </svg>
+          </span>
+          <span>Consent<span>Lab</span></span>
+        </a>
+        <div class="topbar-meta">
+          <span class="guideline-pill">
+            <span class="pulse-dot"></span>
+            EDPB Guidelines 05/2020
+          </span>
+          <a
+            class="source-link"
+            href="https://www.edpb.europa.eu/sites/default/files/files/file1/edpb_guidelines_202005_consent_en.pdf"
+            target="_blank"
+            rel="noreferrer"
+          >
+            View source
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M5.5 3.5h7v7M12 4 4 12" />
+            </svg>
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Interactive compliance workspace</p>
+            <h1>GDPR Cookie Consent<br /><span>Compliance Simulator</span></h1>
+          </div>
+          <p class="hero-copy">
+            Configure a consent banner and see how each design decision affects
+            valid consent under European data protection law.
+          </p>
+        </section>
+
+        <div class="dashboard">
+          <aside class="control-panel" aria-labelledby="controls-title">
+            <div class="panel-heading">
+              <div>
+                <p class="section-number">01</p>
+                <h2 id="controls-title">Banner controls</h2>
+              </div>
+              <button class="reset-button" id="reset-button" type="button">
+                Reset
+              </button>
+            </div>
+            <p class="panel-intro">
+              Toggle design choices to test the legal effect in real time.
+            </p>
+
+            <div class="control-list">
+              <label class="control-item" for="reject-all">
+                <span class="control-copy">
+                  <span class="control-title">“Reject All” on first layer</span>
+                  <span class="control-description">
+                    Give refusal equal and immediate access.
+                  </span>
+                </span>
+                <span class="switch-wrap">
+                  <input id="reject-all" type="checkbox" checked />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span class="switch-value">Yes</span>
+                </span>
+              </label>
+
+              <label class="control-item" for="pre-tick">
+                <span class="control-copy">
+                  <span class="control-title">Pre-tick optional cookies</span>
+                  <span class="control-description">
+                    Analytics and marketing enabled by default.
+                  </span>
+                </span>
+                <span class="switch-wrap">
+                  <input id="pre-tick" type="checkbox" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span class="switch-value">No</span>
+                </span>
+              </label>
+
+              <label class="control-item" for="dark-pattern">
+                <span class="control-copy">
+                  <span class="control-title">Use visual dark patterns</span>
+                  <span class="control-description">
+                    Emphasize acceptance and obscure refusal.
+                  </span>
+                </span>
+                <span class="switch-wrap">
+                  <input id="dark-pattern" type="checkbox" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span class="switch-value">No</span>
+                </span>
+              </label>
+
+              <label class="control-item" for="policy-link">
+                <span class="control-copy">
+                  <span class="control-title">Link detailed Cookie Policy</span>
+                  <span class="control-description">
+                    Explain purposes, duration and recipients.
+                  </span>
+                </span>
+                <span class="switch-wrap">
+                  <input id="policy-link" type="checkbox" checked />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span class="switch-value">Yes</span>
+                </span>
+              </label>
+
+              <label class="control-item" for="settings-link">
+                <span class="control-copy">
+                  <span class="control-title">Offer granular settings</span>
+                  <span class="control-description">
+                    Let people choose consent by purpose.
+                  </span>
+                </span>
+                <span class="switch-wrap">
+                  <input id="settings-link" type="checkbox" checked />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span class="switch-value">Yes</span>
+                </span>
+              </label>
+            </div>
+
+            <div class="principle-note">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+                <path d="M12 11v5M12 8h.01" />
+              </svg>
+              <p>
+                <strong>Core principle</strong>
+                Valid consent must be freely given, specific, informed and
+                unambiguous.
+              </p>
+            </div>
+          </aside>
+
+          <section class="workspace" aria-label="Live preview and compliance audit">
+            <div class="preview-card">
+              <div class="card-heading">
+                <div>
+                  <p class="section-number">02</p>
+                  <h2>Live preview</h2>
+                </div>
+                <span class="live-badge"><span></span> Live</span>
+              </div>
+
+              <div class="browser-frame">
+                <div class="browser-bar">
+                  <div class="browser-dots" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <div class="address-bar">
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <rect x="4.5" y="7" width="7" height="6" rx="1.5" />
+                      <path d="M6 7V5.5a2 2 0 0 1 4 0V7" />
+                    </svg>
+                    durookie.example
+                  </div>
+                  <div class="browser-menu" aria-hidden="true">•••</div>
+                </div>
+
+                <div class="mock-site">
+                  <nav class="mock-nav">
+                    <span class="mock-logo">Durookie<span>™</span></span>
+                    <div class="mock-links">
+                      <span>Products</span><span>Recipes</span><span>About</span>
+                    </div>
+                    <button type="button">Get started</button>
+                  </nav>
+                  <div class="mock-hero">
+                    <h3>All the cookies,<br />none of the creeps.</h3>
+                    <p>Fresh-baked consent, always.</p>
+                    <div class="mock-cta">
+                      <span>Take a bite →</span>
+                    </div>
+                  </div>
+                  <div class="mock-shape shape-one"></div>
+                  <div class="mock-shape shape-two"></div>
+
+                  <div class="cookie-banner" id="cookie-banner">
+                    <button
+                      class="banner-close"
+                      id="banner-close"
+                      type="button"
+                      aria-label="Close banner"
+                    >
+                      ×
+                    </button>
+                    <div class="cookie-icon" aria-hidden="true">
+                      <svg viewBox="0 0 32 32">
+                        <path d="M26.5 18.2A12.2 12.2 0 0 1 13.8 5.5 11 11 0 1 0 26.5 18.2Z" />
+                        <circle cx="12" cy="15" r="1.4" />
+                        <circle cx="17" cy="21" r="1.4" />
+                        <circle cx="10" cy="23" r="1.2" />
+                      </svg>
+                    </div>
+                    <div class="banner-content">
+                      <h4>Your privacy, your choice</h4>
+                      <p>
+                        We use cookies to improve your experience, understand
+                        site usage and personalize content.<span id="policy-copy">
+                          Read our <a href="#cookie-policy">Cookie Policy</a> for
+                          details.</span
+                        >
+                      </p>
+                      <div class="banner-actions" id="banner-actions">
+                        <button class="accept-button" id="accept-button" type="button">
+                          Accept all
+                        </button>
+                        <button class="reject-button" id="reject-button" type="button">
+                          Reject all
+                        </button>
+                        <button class="settings-button" id="settings-button" type="button">
+                          Manage settings
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button class="reopen-banner" id="reopen-banner" type="button">
+                    Cookie settings
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="audit-card" aria-live="polite">
+              <div class="audit-topline">
+                <div>
+                  <p class="section-number">03</p>
+                  <h2>Compliance audit</h2>
+                </div>
+                <div class="score-ring" id="score-ring" aria-label="Compliance score">
+                  <svg viewBox="0 0 68 68" aria-hidden="true">
+                    <circle class="ring-track" cx="34" cy="34" r="29"></circle>
+                    <circle class="ring-value" cx="34" cy="34" r="29"></circle>
+                  </svg>
+                  <span id="score-number">100</span>
+                </div>
+              </div>
+
+              <div class="status-block compliant" id="status-block">
+                <div class="status-icon" id="status-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m7 12.5 3.2 3.2L17.5 8.5" />
+                  </svg>
+                </div>
+                <div>
+                  <p>Current assessment</p>
+                  <h3 id="status-title">Compliant configuration</h3>
+                  <span id="status-subtitle">
+                    This banner supports valid, freely given consent.
+                  </span>
+                </div>
+              </div>
+
+              <ul class="assessment-list" id="assessment-list"></ul>
+
+              <div class="audit-footer">
+                <span>Legal basis</span>
+                <p>
+                  GDPR Articles 4(11) &amp; 7 · EDPB Guidelines 05/2020
+                </p>
+                <span class="updated-time" id="updated-time">Updated now</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer>
+        <p>Educational tool only. This is not legal advice.</p>
+        <span>Built for privacy-conscious product teams.</span>
+      </footer>
+    </div>
+
+    <div class="modal-backdrop" id="settings-modal" hidden>
+      <div
+        class="settings-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
+      >
+        <div class="modal-heading">
+          <div>
+            <p class="eyebrow">Cookie preferences</p>
+            <h2 id="settings-modal-title">Choose what works for you</h2>
+          </div>
+          <button id="modal-close" type="button" aria-label="Close settings">×</button>
+        </div>
+        <p class="modal-intro">
+          Essential cookies keep the site working. Optional cookies are used
+          only with your permission.
+        </p>
+        <div class="preference-list">
+          <div class="preference-row">
+            <div>
+              <strong>Essential</strong>
+              <span>Security, network management and accessibility.</span>
+            </div>
+            <span class="always-on">Always on</span>
+          </div>
+          <label class="preference-row" for="analytics-cookie">
+            <div>
+              <strong>Analytics</strong>
+              <span>Help us understand how the site is used.</span>
+            </div>
+            <span class="mini-switch">
+              <input id="analytics-cookie" type="checkbox" />
+              <span aria-hidden="true"></span>
+            </span>
+          </label>
+          <label class="preference-row" for="marketing-cookie">
+            <div>
+              <strong>Marketing</strong>
+              <span>Personalize messages and measure campaigns.</span>
+            </div>
+            <span class="mini-switch">
+              <input id="marketing-cookie" type="checkbox" />
+              <span aria-hidden="true"></span>
+            </span>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-modal-button" id="modal-reject" type="button">
+            Reject optional
+          </button>
+          <button class="primary-modal-button" id="modal-save" type="button">
+            Save choices
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status">
+      <span id="toast-icon">✓</span>
+      <span id="toast-message">Preferences saved</span>
+    </div>
+
+    <script>
+const controls = {
+  rejectAll: document.querySelector("#reject-all"),
+  preTick: document.querySelector("#pre-tick"),
+  darkPattern: document.querySelector("#dark-pattern"),
+  policyLink: document.querySelector("#policy-link"),
+  settingsLink: document.querySelector("#settings-link"),
+};
+
+const elements = {
+  banner: document.querySelector("#cookie-banner"),
+  bannerActions: document.querySelector("#banner-actions"),
+  rejectButton: document.querySelector("#reject-button"),
+  settingsButton: document.querySelector("#settings-button"),
+  policyCopy: document.querySelector("#policy-copy"),
+  scoreNumber: document.querySelector("#score-number"),
+  ringValue: document.querySelector(".ring-value"),
+  statusBlock: document.querySelector("#status-block"),
+  statusIcon: document.querySelector("#status-icon"),
+  statusTitle: document.querySelector("#status-title"),
+  statusSubtitle: document.querySelector("#status-subtitle"),
+  assessmentList: document.querySelector("#assessment-list"),
+  updatedTime: document.querySelector("#updated-time"),
+  modal: document.querySelector("#settings-modal"),
+  analytics: document.querySelector("#analytics-cookie"),
+  marketing: document.querySelector("#marketing-cookie"),
+  reopenBanner: document.querySelector("#reopen-banner"),
+  toast: document.querySelector("#toast"),
+  toastMessage: document.querySelector("#toast-message"),
+  toastIcon: document.querySelector("#toast-icon"),
+};
+
+const defaults = {
+  rejectAll: true,
+  preTick: false,
+  darkPattern: false,
+  policyLink: true,
+  settingsLink: true,
+};
+
+const tests = [
+  {
+    key: "preTick",
+    weight: 30,
+    invert: true,
+    passTitle: "Affirmative action",
+    passText: "Optional cookies are off by default, supporting an unambiguous choice.",
+    failTitle: "Pre-ticked consent",
+    failText:
+      "Consent requires a clear affirmative action. Pre-ticked optional cookies cannot establish valid consent.",
+    paragraph: "¶ 79–80",
+  },
+  {
+    key: "darkPattern",
+    weight: 25,
+    invert: true,
+    passTitle: "Balanced presentation",
+    passText: "Accept and reject choices are presented without manipulative visual pressure.",
+    failTitle: "Manipulative choice architecture",
+    failText:
+      "Obscuring refusal can undermine real choice and make consent insufficiently freely given.",
+    paragraph: "¶ 13–14",
+  },
+  {
+    key: "rejectAll",
+    weight: 20,
+    passTitle: "Accessible refusal",
+    passText: "People can decline optional processing immediately and without extra friction.",
+    failTitle: "Refusal requires extra effort",
+    failText:
+      "No first-layer rejection creates unequal friction and weakens the evidence of a genuine choice.",
+    paragraph: "¶ 3, 13",
+  },
+  {
+    key: "policyLink",
+    weight: 10,
+    passTitle: "Informed consent",
+    passText: "A detailed policy is available before the person makes a decision.",
+    failTitle: "Insufficient information",
+    failText:
+      "Users need accessible information about purposes, data, controller and withdrawal before consenting.",
+    paragraph: "¶ 62–70",
+  },
+  {
+    key: "settingsLink",
+    weight: 15,
+    passTitle: "Purpose granularity",
+    passText: "Separate choices are available for analytics and marketing purposes.",
+    failTitle: "No granular choice",
+    failText:
+      "A single bundled choice does not allow separate consent for distinct processing purposes.",
+    paragraph: "¶ 42–44",
+  },
+];
+
+function getState() {
+  return Object.fromEntries(
+    Object.entries(controls).map(([key, input]) => [key, input.checked]),
+  );
+}
+
+function testPasses(test, state) {
+  return test.invert ? !state[test.key] : state[test.key];
+}
+
+function renderAssessment(state) {
+  let score = 100;
+  let failCount = 0;
+
+  const results = tests.map((test) => {
+    const passes = testPasses(test, state);
+    if (!passes) {
+      score -= test.weight;
+      failCount += 1;
+    }
+    return { ...test, passes };
+  });
+
+  elements.scoreNumber.textContent = score;
+  const circumference = 182.2;
+  elements.ringValue.style.strokeDashoffset =
+    circumference - (score / 100) * circumference;
+
+  const status =
+    failCount === 0 ? "compliant" : score >= 80 ? "review" : "noncompliant";
+
+  elements.statusBlock.className = `status-block ${status}`;
+
+  const statusContent = {
+    compliant: {
+      title: "Compliant configuration",
+      subtitle: "This banner supports valid, freely given consent.",
+      icon: '<path d="m7 12.5 3.2 3.2L17.5 8.5" />',
+      color: "#1e7a52",
+    },
+    review: {
+      title: "Compliance risks detected",
+      subtitle: "This banner needs revision before deployment.",
+      icon: '<path d="M12 8v5M12 16.5h.01" /><path d="M10.2 4.7 3.5 17a2 2 0 0 0 1.8 3h13.4a2 2 0 0 0 1.8-3L13.8 4.7a2 2 0 0 0-3.6 0Z" />',
+      color: "#a86318",
+    },
+    noncompliant: {
+      title: "Non-compliant configuration",
+      subtitle: `${failCount} consent requirement${failCount === 1 ? "" : "s"} failed.`,
+      icon: '<path d="m8 8 8 8M16 8l-8 8" />',
+      color: "#c44338",
+    },
+  }[status];
+
+  elements.statusTitle.textContent = statusContent.title;
+  elements.statusSubtitle.textContent = statusContent.subtitle;
+  elements.statusIcon.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${statusContent.icon}</svg>`;
+  elements.ringValue.style.stroke = statusContent.color;
+
+  elements.assessmentList.innerHTML = results
+    .map(
+      (result, index) => `
+        <li class="assessment-item ${result.passes ? "pass" : "fail"}" style="animation-delay:${index * 35}ms">
+          <span class="assessment-symbol">${result.passes ? "✓" : "×"}</span>
+          <p>
+            <strong>${result.passes ? result.passTitle : result.failTitle}</strong>
+            ${result.passes ? result.passText : result.failText}
+            <span class="legal-ref"> ${result.paragraph}</span>
+          </p>
+        </li>
+      `,
+    )
+    .join("");
+
+  elements.updatedTime.textContent = "Updated just now";
+}
+
+function renderPreview(state) {
+  elements.rejectButton.hidden = !state.rejectAll;
+  elements.settingsButton.hidden = !state.settingsLink;
+  elements.policyCopy.hidden = !state.policyLink;
+  elements.bannerActions.classList.toggle("dark-pattern", state.darkPattern);
+
+  elements.analytics.checked = state.preTick;
+  elements.marketing.checked = state.preTick;
+
+  elements.banner.classList.remove("is-updating");
+  void elements.banner.offsetWidth;
+  elements.banner.classList.add("is-updating");
+}
+
+function updateSwitchLabels() {
+  Object.values(controls).forEach((input) => {
+    const value = input.parentElement.querySelector(".switch-value");
+    value.textContent = input.checked ? "Yes" : "No";
+  });
+}
+
+function update() {
+  const state = getState();
+  updateSwitchLabels();
+  renderPreview(state);
+  renderAssessment(state);
+}
+
+function hideBanner(message) {
+  elements.banner.classList.add("hidden");
+  elements.reopenBanner.classList.add("visible");
+  showToast(message);
+}
+
+let toastTimer;
+function showToast(message, icon = "✓") {
+  clearTimeout(toastTimer);
+  elements.toastMessage.textContent = message;
+  elements.toastIcon.textContent = icon;
+  elements.toast.classList.add("visible");
+  toastTimer = setTimeout(() => elements.toast.classList.remove("visible"), 2200);
+}
+
+function openModal() {
+  elements.modal.hidden = false;
+  document.body.style.overflow = "hidden";
+  document.querySelector("#modal-close").focus();
+}
+
+function closeModal() {
+  elements.modal.hidden = true;
+  document.body.style.overflow = "";
+  elements.settingsButton.focus();
+}
+
+Object.values(controls).forEach((input) => {
+  input.addEventListener("change", update);
+});
+
+document.querySelector("#reset-button").addEventListener("click", () => {
+  Object.entries(defaults).forEach(([key, value]) => {
+    controls[key].checked = value;
+  });
+  update();
+  showToast("Simulator reset", "↺");
+});
+
+document
+  .querySelector("#accept-button")
+  .addEventListener("click", () => hideBanner("All cookies accepted"));
+elements.rejectButton.addEventListener("click", () =>
+  hideBanner("Optional cookies rejected"),
+);
+elements.settingsButton.addEventListener("click", openModal);
+document.querySelector("#modal-close").addEventListener("click", closeModal);
+document.querySelector("#modal-save").addEventListener("click", () => {
+  closeModal();
+  hideBanner("Cookie choices saved");
+});
+document.querySelector("#modal-reject").addEventListener("click", () => {
+  elements.analytics.checked = false;
+  elements.marketing.checked = false;
+  closeModal();
+  hideBanner("Optional cookies rejected");
+});
+
+elements.reopenBanner.addEventListener("click", () => {
+  elements.banner.classList.remove("hidden");
+  elements.reopenBanner.classList.remove("visible");
+});
+
+elements.modal.addEventListener("click", (event) => {
+  if (event.target === elements.modal) closeModal();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !elements.modal.hidden) closeModal();
+});
+
+update();
+    </script>
+  </body>
+</html>
